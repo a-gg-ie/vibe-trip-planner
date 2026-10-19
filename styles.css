@@ -1,0 +1,34 @@
+/* Custom Neo-Brutalist Styles */
+@layer utilities {
+  .neo-box {
+    border: 4px solid #000;
+    box-shadow: 6px 6px 0px 0px #000;
+  }
+  .neo-btn {
+    border: 3px solid #000;
+    box-shadow: 4px 4px 0px 0px #000;
+    transition: all 0.1s ease-in-out;
+  }
+  .neo-btn:active {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0px 0px #000;
+  }
+}
+
+/* Print thermal receipt styling */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #printableReceipt, #printableReceipt * {
+    visibility: visible;
+  }
+  #printableReceipt {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    color: black !important;
+    background: white !important;
+  }
+}
