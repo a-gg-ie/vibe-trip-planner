@@ -3,33 +3,530 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VibeTrip — Anti-Design Neo-Brutalist Trip Planner</title>
+  <title>VibeTrip — Anti-Design Trip Planner</title>
 
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@700;800&display=swap" rel="stylesheet">
 
-  <!-- Tailwind CSS via CDN -->
+  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- Stylesheet -->
-  <link rel="stylesheet" href="styles.css">
-</head>
-<body class="bg-[#f0f0f0] text-black font-mono transition-colors duration-300 min-h-screen p-4 md:p-8">
+  <script>
+    // Suppress Tailwind CDN production warning
+    const originalWarn = console.warn;
+    console.warn = (...args) => {
+      if (args[0] && typeof args[0] === 'string' && args[0].includes('cdn.tailwindcss.com')) return;
+      originalWarn(...args);
+    };
 
-  <main class="max-w-4xl mx-auto space-y-8">
+    // Custom Tailwind Configuration
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            mono: ['"Space Mono"', 'monospace'],
+            display: ['Syne', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Screen Shake Keyframes */
+    @keyframes shake {
+      0% { transform: translate(1px, 1px) rotate(0deg); }
+      10% { transform: translate(-1px, -2px) rotate(-1deg); }
+      20% { transform: translate(-3px, 0px) rotate(1deg); }
+      30% { transform: translate(3px, 2px) rotate(0deg); }
+      40% { transform: translate(1px, -1px) rotate(1deg); }
+      50% { transform: translate(-1px, 2px) rotate(-1deg); }
+      60% { transform: translate(-3px, 1px) rotate(0deg); }
+      70% { transform: translate(3px, 1px) rotate(-1deg); }
+      80% { transform: translate(-1px, -1px) rotate(1deg); }
+      90% { transform: translate(1px, 2px) rotate(0deg); }
+      100% { transform: translate(1px, -2px) rotate(-1deg); }
+    }
+
+    .shake-effect {
+      animation: shake 0.5s infinite;
+    }
+
+    /* Print thermal receipt styling */
+    @media print {
+      body * {
+        visibility: hidden !important;
+      }
+      #printableReceipt, #printableReceipt * {
+        visibility: visible !important;
+      }
+      #printableReceipt {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        background: #ffffff !important;
+        color: #000000 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body id="bodyRoot" class="bg-[#f0f0f0] text-black font-mono transition-colors duration-500 min-h-screen">
+
+  <!-- Top Alert Banner -->
+  <div id="topBanner" class="bg-black text-yellow-400 font-extrabold text-xs md:text-sm py-2 px-4 text-center uppercase tracking-widest border-b-4 border-black no-print overflow-hidden whitespace-nowrap">
+    <span class="inline-block animate-pulse">⚠️ SYSTEM ALERT: 0% ALGORITHMIC BIAS // 100% RAW TRAVEL VIBES // DITCH YOUR PHONE MODE ENGAGED ⚠️</span>
+  </div>
+
+  <main class="max-w-4xl mx-auto space-y-8 p-4 md:p-8 no-print">
     <!-- Header -->
-    <header class="border-4 border-black bg-white p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-      <h1 class="font-display font-extrabold text-4xl md:text-6xl tracking-tight uppercase">VIBETRIP 🧳⚡</h1>
-      <p class="mt-2 text-lg font-bold">Pick a city, set a vibe, ditch your phone.</p>
+    <header id="headerBox" class="border-4 border-black bg-white p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-colors duration-500">
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 class="font-display font-extrabold text-4xl md:text-6xl tracking-tight uppercase">VIBETRIP 🧳⚡</h1>
+          <p class="mt-2 text-lg font-bold">Pick a city, set a vibe, ditch your phone.</p>
+        </div>
+        <div id="vibeTag" class="px-4 py-2 border-2 border-black bg-yellow-300 font-bold uppercase tracking-wider text-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+          Vibe: Cyberpunk ⚡
+        </div>
+      </div>
     </header>
 
-    <!-- App Form & Output Container -->
-    <div id="appContainer"></div>
+    <!-- Controls Form -->
+    <section id="formBox" class="border-4 border-black bg-white p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] space-y-6 transition-colors duration-500">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label class="block font-bold text-xl uppercase mb-2">1. Select Destination</label>
+          <select id="citySelect" class="w-full p-3 border-4 border-black bg-yellow-300 font-bold text-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] focus:outline-none cursor-pointer">
+            <option value="tokyo">Tokyo 🇯🇵</option>
+            <option value="berlin">Berlin 🇩🇪</option>
+            <option value="nyc">New York City 🇺🇸</option>
+            <option value="london">London 🇬🇧</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block font-bold text-xl uppercase mb-2">2. Choose Vibe</label>
+          <select id="vibeSelect" class="w-full p-3 border-4 border-black bg-cyan-300 font-bold text-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] focus:outline-none cursor-pointer">
+            <option value="cyberpunk">Cyberpunk Nightlife ⚡</option>
+            <option value="cozy">Cozy Books & Coffee ☕</option>
+            <option value="art">Underground Art & Music 🎨</option>
+            <option value="chaos">Chaos Mode 🎲</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-4 pt-2">
+        <button id="generateBtn" onclick="generateItinerary()" class="flex-1 py-4 border-4 border-black bg-green-400 hover:bg-green-300 font-extrabold text-2xl uppercase shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-1 active:translate-y-1 active:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all">
+          Generate Timeline 🚀
+        </button>
+        <button id="chaosBtn" onclick="triggerChaosMode()" class="py-4 px-6 border-4 border-black bg-pink-500 hover:bg-pink-400 text-white font-extrabold text-xl uppercase shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-1 active:translate-y-1 active:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all">
+          🎲 Chaos Mode
+        </button>
+      </div>
+    </section>
+
+    <!-- Output Area -->
+    <div id="outputContainer"></div>
   </main>
 
-  <!-- JavaScript -->
-  <script src="app.js"></script>
+  <!-- Thermal Receipt Area -->
+  <div id="printableReceipt" class="hidden"></div>
+
+  <script>
+    // Theme palette mappings
+    const THEMES = {
+      cyberpunk: {
+        bodyBg: '#0d1117',
+        headerBg: '#161b22',
+        textColor: '#00ffcc',
+        bannerBg: '#ff0055',
+        bannerText: '#ffffff',
+        tagBg: '#ff0055',
+        tagText: '#ffffff',
+        name: 'CYBERPUNK ⚡'
+      },
+      cozy: {
+        bodyBg: '#fef3c7',
+        headerBg: '#fffbe8',
+        textColor: '#78350f',
+        bannerBg: '#78350f',
+        bannerText: '#fef3c7',
+        tagBg: '#f59e0b',
+        tagText: '#ffffff',
+        name: 'COZY CAFE ☕'
+      },
+      art: {
+        bodyBg: '#e0e7ff',
+        headerBg: '#ffffff',
+        textColor: '#3730a3',
+        bannerBg: '#4f46e5',
+        bannerText: '#ffffff',
+        tagBg: '#6366f1',
+        tagText: '#ffffff',
+        name: 'UNDERGROUND ART 🎨'
+      },
+      chaos: {
+        bodyBg: '#f43f5e',
+        headerBg: '#fef08a',
+        textColor: '#000000',
+        bannerBg: '#000000',
+        bannerText: '#00ff00',
+        tagBg: '#000000',
+        tagText: '#00ff00',
+        name: 'CHAOS MODE 🎲'
+      }
+    };
+
+    // Itinerary Database
+    const ITINERARY_DATA = {
+      tokyo: {
+        name: 'Tokyo',
+        country: 'Japan 🇯🇵',
+        phrases: ['Sumimasen (Excuse me)', 'Arigato (Thank you)', 'Kore wa ikura desu ka? (How much is this?)'],
+        cyberpunk: [
+          {
+            time: '09:00 AM',
+            optionA: { title: 'Akihabara Tech Arcade', duration: '2 hrs', est: '¥2,000', transit: 'JR Yamanote Line' },
+            optionB: { title: 'Nakano Broadway Vintage Collectibles', duration: '2 hrs', est: '¥1,500', transit: 'Chuo Line' }
+          },
+          {
+            time: '02:00 PM',
+            optionA: { title: 'TeamLab Planets Immersive Art', duration: '2.5 hrs', est: '¥3,800', transit: 'Yurikamome Line' },
+            optionB: { title: 'Odaiba Gundam Base & Skyline', duration: '2 hrs', est: '¥1,000', transit: 'Rinkai Line' }
+          },
+          {
+            time: '08:00 PM',
+            optionA: { title: 'Shinjuku Oidoko Yokocho Cyber Izakaya', duration: '3 hrs', est: '¥4,500', transit: 'Walk from East Exit' },
+            optionB: { title: 'Shibuya Underground Club Circuit', duration: '4 hrs', est: '¥5,000', transit: 'Hanzomon Line' }
+          }
+        ]
+      },
+      berlin: {
+        name: 'Berlin',
+        country: 'Germany 🇩🇪',
+        phrases: ['Entschuldigung (Excuse me)', 'Danke (Thanks)', 'Wo ist die U-Bahn? (Where is the subway?)'],
+        art: [
+          {
+            time: '10:00 AM',
+            optionA: { title: 'East Side Gallery Mural Walk', duration: '2 hrs', est: '€0', transit: 'U-Bahn U1 to Warschauer Str.' },
+            optionB: { title: 'Urban Nation Street Art Museum', duration: '2 hrs', est: '€0', transit: 'U-Bahn U2 to Nollendorfplatz' }
+          },
+          {
+            time: '03:00 PM',
+            optionA: { title: 'Mauerpark Flea Market & Karaoke', duration: '3 hrs', est: '€15', transit: 'M10 Tram' },
+            optionB: { title: 'Tempelhof Airport Runway Cycling', duration: '2 hrs', est: '€10', transit: 'U6 to Platz der Luftbrücke' }
+          },
+          {
+            time: '09:00 PM',
+            optionA: { title: 'Kreuzberg Vinyl Record Bar', duration: '3 hrs', est: '€20', transit: 'U8 to Kottbusser Tor' },
+            optionB: { title: 'Spree River Techno Warehouse', duration: '5 hrs', est: '€25', transit: 'S-Bahn to Ostkreuz' }
+          }
+        ]
+      },
+      nyc: {
+        name: 'New York City',
+        country: 'USA 🇺🇸',
+        phrases: ['Yo, where is the train?', 'How much for a slice?', 'Which way is downtown?'],
+        cozy: [
+          {
+            time: '09:00 AM',
+            optionA: { title: 'Greenwich Village Coffee & Book Hop', duration: '2 hrs', est: '$15', transit: 'Subway A/C/E to W 4th St' },
+            optionB: { title: 'SoHo Espresso Bar & Zine Shop', duration: '2 hrs', est: '$18', transit: 'Subway N/R to Prince St' }
+          },
+          {
+            time: '01:00 PM',
+            optionA: { title: 'Washington Square Park Chess & Bagels', duration: '2 hrs', est: '$12', transit: 'Walk 5 mins' },
+            optionB: { title: 'High Line Elevated Park Stroll', duration: '2 hrs', est: '$0', transit: 'Subway 7 to Hudson Yards' }
+          },
+          {
+            time: '07:00 PM',
+            optionA: { title: 'Comedy Cellar Underground Show', duration: '2.5 hrs', est: '$35', transit: 'Walk from Village' },
+            optionB: { title: 'Brooklyn Bridge Sunset Walk & Pizza', duration: '3 hrs', est: '$25', transit: 'Subway 2/3 to Clark St' }
+          }
+        ]
+      },
+      london: {
+        name: 'London',
+        country: 'UK 🇬🇧',
+        phrases: ['Cheers mate!', 'Where is the Tube station?', 'Mind the gap!'],
+        chaos: [
+          {
+            time: '10:00 AM',
+            optionA: { title: 'Camden Punk Rock Flea Market', duration: '2 hrs', est: '£15', transit: 'Northern Line to Camden Town' },
+            optionB: { title: 'Borough Market Street Food Blitz', duration: '2 hrs', est: '£20', transit: 'Jubilee Line to London Bridge' }
+          },
+          {
+            time: '02:00 PM',
+            optionA: { title: 'Tate Modern Underground Tanks Gallery', duration: '2.5 hrs', est: '£0', transit: 'Walk across Millennium Bridge' },
+            optionB: { title: 'Soho Vintage Record Shop Crawl', duration: '2.5 hrs', est: '£25', transit: 'Central Line to Tottenham Court Rd' }
+          },
+          {
+            time: '08:00 PM',
+            optionA: { title: 'Shoreditch Speakeasy Bar Hunt', duration: '3.5 hrs', est: '£40', transit: 'Overground to Shoreditch High St' },
+            optionB: { title: 'Southbank Underground Skatepark', duration: '2 hrs', est: '£10', transit: 'Northern Line to Waterloo' }
+          }
+        ]
+      }
+    };
+
+    // Global Selected Choices State
+    let selectedSelections = {};
+
+    // Dynamic Theme Switching
+    function applyTheme(themeKey) {
+      const theme = THEMES[themeKey] || THEMES.cyberpunk;
+      const body = document.getElementById('bodyRoot');
+      const header = document.getElementById('headerBox');
+      const form = document.getElementById('formBox');
+      const topBanner = document.getElementById('topBanner');
+      const vibeTag = document.getElementById('vibeTag');
+
+      body.style.backgroundColor = theme.bodyBg;
+      body.style.color = theme.textColor;
+
+      header.style.backgroundColor = theme.headerBg;
+      form.style.backgroundColor = theme.headerBg;
+
+      topBanner.style.backgroundColor = theme.bannerBg;
+      topBanner.style.color = theme.bannerText;
+
+      vibeTag.style.backgroundColor = theme.tagBg;
+      vibeTag.style.color = theme.tagText;
+      vibeTag.innerText = `Vibe: ${theme.name}`;
+    }
+
+    // Attach listener to vibe selector dropdown
+    document.getElementById('vibeSelect').addEventListener('change', (e) => {
+      applyTheme(e.target.value);
+    });
+
+    // Initialize Default Theme
+    applyTheme('cyberpunk');
+
+    // Generate Timeline Output
+    function generateItinerary() {
+      const cityKey = document.getElementById('citySelect').value;
+      const vibeKey = document.getElementById('vibeSelect').value;
+      const cityData = ITINERARY_DATA[cityKey] || ITINERARY_DATA.tokyo;
+      const slots = cityData[vibeKey] || cityData.cyberpunk || cityData.art || cityData.cozy || cityData.chaos;
+
+      selectedSelections = {};
+      slots.forEach((_, idx) => {
+        selectedSelections[idx] = 'A';
+      });
+
+      renderOutput(cityData, slots, vibeKey);
+    }
+
+    // Chaos Mode Trigger with Screen Shake
+    function triggerChaosMode() {
+      const body = document.getElementById('bodyRoot');
+      body.classList.add('shake-effect');
+
+      setTimeout(() => {
+        body.classList.remove('shake-effect');
+      }, 500);
+
+      const cities = Object.keys(ITINERARY_DATA);
+      const vibes = Object.keys(THEMES);
+
+      const randomCity = cities[Math.floor(Math.random() * cities.length)];
+      const randomVibe = vibes[Math.floor(Math.random() * vibes.length)];
+
+      document.getElementById('citySelect').value = randomCity;
+      document.getElementById('vibeSelect').value = randomVibe;
+
+      applyTheme(randomVibe);
+      generateItinerary();
+    }
+
+    // Handle Option Selection
+    function selectOption(slotIndex, optionKey) {
+      selectedSelections[slotIndex] = optionKey;
+      const cityKey = document.getElementById('citySelect').value;
+      const vibeKey = document.getElementById('vibeSelect').value;
+      const cityData = ITINERARY_DATA[cityKey] || ITINERARY_DATA.tokyo;
+      const slots = cityData[vibeKey] || cityData.cyberpunk || cityData.art || cityData.cozy || cityData.chaos;
+
+      renderOutput(cityData, slots, vibeKey);
+    }
+
+    // Render Timeline and Offline Banner
+    function renderOutput(cityData, slots, vibeKey) {
+      const container = document.getElementById('outputContainer');
+      const theme = THEMES[vibeKey] || THEMES.cyberpunk;
+
+      let html = `
+        <section class="border-4 border-black p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] space-y-6 transition-colors duration-500" style="background-color: ${theme.headerBg}">
+          <div class="flex justify-between items-center border-b-4 border-black pb-4">
+            <div>
+              <h2 class="text-3xl font-extrabold font-display uppercase">${cityData.name} Timeline</h2>
+              <p class="font-bold text-sm">Custom ${theme.name} Route</p>
+            </div>
+            <span class="px-3 py-1 border-2 border-black bg-black text-white font-bold text-xs uppercase">${cityData.country}</span>
+          </div>
+
+          <div class="space-y-6">
+      `;
+
+      slots.forEach((slot, idx) => {
+        const selected = selectedSelections[idx];
+
+        html += `
+          <div class="border-4 border-black p-4 bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] space-y-3">
+            <div class="flex justify-between items-center font-extrabold text-lg border-b-2 border-black pb-2">
+              <span>⏰ ${slot.time}</span>
+              <span class="text-xs bg-yellow-300 px-2 py-1 border border-black uppercase">Slot #${idx + 1}</span>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <!-- Option A -->
+              <div onclick="selectOption(${idx}, 'A')" class="cursor-pointer border-4 border-black p-3 transition-all ${selected === 'A' ? 'bg-green-300 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] translate-x-[-2px] translate-y-[-2px]' : 'bg-gray-100 opacity-70 hover:opacity-100'}">
+                <div class="flex justify-between items-start">
+                  <span class="font-bold text-xs px-2 py-0.5 bg-black text-white">OPTION A</span>
+                  ${selected === 'A' ? '✅' : ''}
+                </div>
+                <h4 class="font-extrabold text-base mt-2">${slot.optionA.title}</h4>
+                <div class="text-xs font-bold mt-2 space-y-1">
+                  <p>⏳ ${slot.optionA.duration} | 💰 ${slot.optionA.est}</p>
+                  <p class="text-gray-700">🚌 ${slot.optionA.transit}</p>
+                </div>
+                <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(slot.optionA.title + ' ' + cityData.name)}" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-2 text-xs font-extrabold underline hover:text-blue-600">📍 Google Maps ↗</a>
+              </div>
+
+              <!-- Option B -->
+              <div onclick="selectOption(${idx}, 'B')" class="cursor-pointer border-4 border-black p-3 transition-all ${selected === 'B' ? 'bg-green-300 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] translate-x-[-2px] translate-y-[-2px]' : 'bg-gray-100 opacity-70 hover:opacity-100'}">
+                <div class="flex justify-between items-start">
+                  <span class="font-bold text-xs px-2 py-0.5 bg-black text-white">OPTION B</span>
+                  ${selected === 'B' ? '✅' : ''}
+                </div>
+                <h4 class="font-extrabold text-base mt-2">${slot.optionB.title}</h4>
+                <div class="text-xs font-bold mt-2 space-y-1">
+                  <p>⏳ ${slot.optionB.duration} | 💰 ${slot.optionB.est}</p>
+                  <p class="text-gray-700">🚌 ${slot.optionB.transit}</p>
+                </div>
+                <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(slot.optionB.title + ' ' + cityData.name)}" target="_blank" onclick="event.stopPropagation()" class="inline-block mt-2 text-xs font-extrabold underline hover:text-blue-600">📍 Google Maps ↗</a>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+
+      // Offline Challenge Banner
+      html += `
+          </div>
+
+          <div class="border-4 border-black bg-yellow-300 p-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] space-y-4 text-black">
+            <div class="flex items-center gap-3">
+              <span class="text-3xl">📵</span>
+              <div>
+                <h3 class="font-extrabold text-xl uppercase tracking-tight">Challenge: Ditch Your Phone!</h3>
+                <p class="text-xs font-bold">Print this receipt, turn off mobile data, and explore using paper only.</p>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2 border-t-2 border-black pt-3">
+              <input type="checkbox" id="offlineChallengeCheck" class="w-5 h-5 border-2 border-black accent-black cursor-pointer">
+              <label for="offlineChallengeCheck" class="font-bold text-sm cursor-pointer select-none">
+                I accept the Offline Exploration Challenge! (Stamps receipt)
+              </label>
+            </div>
+
+            <button onclick="printReceipt('${cityData.name}', '${vibeKey}')" class="w-full py-3 border-4 border-black bg-black text-white font-extrabold text-xl uppercase shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:bg-gray-800 active:translate-x-1 active:translate-y-1 transition-all">
+              🖨️ Print Old-School Receipt
+            </button>
+          </div>
+        </section>
+      `;
+
+      container.innerHTML = html;
+    }
+
+    // Thermal Receipt Generation and Window Print
+    function printReceipt(cityName, vibeKey) {
+      const cityKey = document.getElementById('citySelect').value;
+      const cityData = ITINERARY_DATA[cityKey] || ITINERARY_DATA.tokyo;
+      const slots = cityData[vibeKey] || cityData.cyberpunk || cityData.art || cityData.cozy || cityData.chaos;
+      const challengeAccepted = document.getElementById('offlineChallengeCheck')?.checked;
+
+      const receiptElem = document.getElementById('printableReceipt');
+
+      let receiptHtml = `
+        <div class="p-6 font-mono text-black max-w-md mx-auto border-4 border-black">
+          <div class="text-center border-b-4 border-black pb-4 mb-4">
+            <h1 class="text-3xl font-extrabold uppercase">VIBETRIP RECEIPT</h1>
+            <p class="text-xs font-bold">ISSUE DATE: ${new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' }).toUpperCase()}</p>
+            <p class="text-xs font-bold">DESTINATION: ${cityName.toUpperCase()} (${cityData.country})</p>
+            <p class="text-xs font-bold">VIBE MODE: ${vibeKey.toUpperCase()}</p>
+
+            ${challengeAccepted ? `
+              <div class="mt-3 border-2 border-black p-2 bg-black text-white font-extrabold text-sm uppercase">
+                ★ OFFLINE CHALLENGE ACCEPTED ★
+              </div>
+            ` : ''}
+          </div>
+
+          <div class="space-y-4 mb-6">
+            <h2 class="font-extrabold text-lg border-b-2 border-black pb-1 uppercase">Selected Route Timeline</h2>
+      `;
+
+      slots.forEach((slot, idx) => {
+        const choice = selectedSelections[idx] || 'A';
+        const item = choice === 'A' ? slot.optionA : slot.optionB;
+
+        receiptHtml += `
+          <div class="border-b-2 border-dashed border-black pb-2 text-xs">
+            <p class="font-extrabold">[${slot.time}] OPTION ${choice}: ${item.title.toUpperCase()}</p>
+            <p>EST. DURATION: ${item.duration} | EST. COST: ${item.est}</p>
+            <p>TRANSIT GUIDE: ${item.transit}</p>
+            <div class="mt-1 flex items-center gap-2">
+              <span>[ ] Landmark Visited</span>
+            </div>
+          </div>
+        `;
+      });
+
+      receiptHtml += `
+          </div>
+
+          <div class="border-t-4 border-black pt-4 mb-6 text-xs">
+            <h3 class="font-extrabold border-b-2 border-black pb-1 uppercase mb-2">City Survival Cheat Sheet</h3>
+            <ul class="list-disc pl-4 space-y-1 font-bold">
+      `;
+
+      cityData.phrases.forEach(phrase => {
+        receiptHtml += `<li>${phrase}</li>`;
+      });
+
+      receiptHtml += `
+            </ul>
+          </div>
+
+          <div class="text-center border-t-4 border-black pt-4 text-xs font-extrabold space-y-1">
+            <p>THANK YOU FOR CHOOSING VIBETRIP!</p>
+            <p>NO SMARTPHONE. NO GPS. JUST VIBES.</p>
+            <p>*** END OF RECEIPT ***</p>
+          </div>
+        </div>
+      `;
+
+      receiptElem.innerHTML = receiptHtml;
+      receiptElem.classList.remove('hidden');
+
+      window.print();
+
+      setTimeout(() => {
+        receiptElem.classList.add('hidden');
+      }, 1000);
+    }
+  </script>
 </body>
 </html>
